@@ -15,20 +15,17 @@ c_y = 120 * 0.5
 TAG_SIZE_MM = 100.0
 
 # 蓝灯呼吸指示（程序运行中）
-led = pyb.LED(3)  # 3 = 蓝灯
+blue_led = pyb.LED(3)  # 3 = 蓝灯
+red_led = pyb.LED(1)   # 1 = 红灯
 breath = 0
 breath_dir = 5
 
-# 串口输出：USB 虚拟串口优先（直连电脑）
-USE_USB_VCP = True
-if USE_USB_VCP:
-    uart = pyb.USB_VCP()
-    # 不阻塞等待，上位机连接后再输出
-    if uart.isconnected():
-        uart.write("APRILTAG VCP READY\n")
-else:
-    uart = pyb.UART(3, 115200, timeout_char=1000)
-    uart.write("APRILTAG UART READY\n")
+# 串口输出：USB VCP + 硬件 UART3(P4/P5)
+uart_vcp = pyb.USB_VCP()
+uart_hw = pyb.UART(3, 19200, timeout_char=1000)
+if uart_vcp.isconnected():
+    uart_vcp.write("APRILTAG VCP READY\n")
+uart_hw.write("APRILTAG UART3 READY\n")
 
 last_heartbeat = pyb.millis()
 
@@ -53,7 +50,7 @@ while True:
     elif breath <= 0:
         breath = 0
         breath_dir = 5
-    led.intensity(breath)
+    blue_led.intensity(breath)
 
     img = sensor.snapshot()
     found = False
@@ -71,16 +68,27 @@ while True:
         ry = math.radians(ry_deg)
         rz = math.radians(rz_deg)
         # 串口输出完整位姿信息（含角度与弧度）
-        if (not USE_USB_VCP) or uart.isconnected():
-            uart.write(
+        if uart_vcp.isconnected():
+            uart_vcp.write(
                 "id=%d,tx=%.2f,ty=%.2f,tz=%.2f,rx=%.3f,ry=%.3f,rz=%.3f,rx_deg=%.2f,ry_deg=%.2f,rz_deg=%.2f\n"
                 % (tag.id(), tx, ty, tz, rx, ry, rz, rx_deg, ry_deg, rz_deg)
             )
+        uart_hw.write(
+            "id=%d,tx=%.2f,ty=%.2f,tz=%.2f,rx=%.3f,ry=%.3f,rz=%.3f,rx_deg=%.2f,ry_deg=%.2f,rz_deg=%.2f\n"
+            % (tag.id(), tx, ty, tz, rx, ry, rz, rx_deg, ry_deg, rz_deg)
+        )
+    # 红灯：检测到标签就亮
+    if found:
+        red_led.on()
+    else:
+        red_led.off()
+
     # 心跳：1 秒输出一次，方便确认串口连通
     if not found:
         now = pyb.millis()
         if (now - last_heartbeat) > 1000:
-            if (not USE_USB_VCP) or uart.isconnected():
-                uart.write("none\n")
+            if uart_vcp.isconnected():
+                uart_vcp.write("none\n")
+            uart_hw.write("none\n")
             last_heartbeat = now
     # print(clock.fps())
