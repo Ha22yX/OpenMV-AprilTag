@@ -12,7 +12,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
-PORT = "COM20"
+PORT = "COM14"
 BAUD = 115200
 
 AXIS_LEN = 1
@@ -46,10 +46,16 @@ def parse_line(line):
             d[k.strip()] = float(v) if k != "id" else int(v)
         if "id" not in d:
             d["id"] = 0
+        # 必要字段缺失则丢弃
+        for key in ("tx", "ty", "tz"):
+            if key not in d:
+                return None
         if ("rx" not in d) and ("rx_deg" in d):
             d["rx"] = math.radians(d["rx_deg"])
             d["ry"] = math.radians(d["ry_deg"])
             d["rz"] = math.radians(d["rz_deg"])
+        if ("rx" not in d) or ("ry" not in d) or ("rz" not in d):
+            return None
         return d
     except Exception:
         return None

@@ -20,6 +20,18 @@ red_led = pyb.LED(1)   # 1 = 红灯
 breath = 0
 breath_dir = 5
 
+# 平滑与异常值过滤
+POS_EMA_ALPHA = 0.2    # 位置平滑系数
+ANG_EMA_ALPHA = 0.3    # 角度平滑系数
+MAX_POS_JUMP = 50.0    # mm，单帧最大允许跳变
+MAX_ANG_JUMP = 45.0    # deg，单帧最大允许跳变
+last_tx = None
+last_ty = None
+last_tz = None
+last_rx_deg = None
+last_ry_deg = None
+last_rz_deg = None
+
 # 串口输出：USB VCP + 硬件 UART3(P4/P5)
 uart_vcp = pyb.USB_VCP()
 uart_hw = pyb.UART(3, 19200, timeout_char=1000)
@@ -34,6 +46,14 @@ def degrees(radians):
 
 def normalize_deg(d):
     # 归一化到 [-180, 180]
+    while d > 180:
+        d -= 360
+    while d < -180:
+        d += 360
+    return d
+
+def ang_diff(a, b):
+    d = a - b
     while d > 180:
         d -= 360
     while d < -180:
@@ -64,6 +84,28 @@ while True:
         rx_deg = normalize_deg(degrees(tag.x_rotation()))
         ry_deg = normalize_deg(degrees(tag.y_rotation()))
         rz_deg = normalize_deg(degrees(tag.z_rotation()))
+        # 异常值过滤（跳变过大则丢弃本次输出）
+        if last_tx is not None:
+            if (abs(tx - last_tx) > MAX_POS_JUMP or
+                abs(ty - last_ty) > MAX_POS_JUMP or
+                abs(tz - last_tz) > MAX_POS_JUMP or
+                abs(ang_diff(rx_deg, last_rx_deg)) > MAX_ANG_JUMP or
+                abs(ang_diff(ry_deg, last_ry_deg)) > MAX_ANG_JUMP or
+                abs(ang_diff(rz_deg, last_rz_deg)) > MAX_ANG_JUMP):
+                continue
+        # EMA 平滑
+        if last_tx is None:
+            last_tx, last_ty, last_tz = tx, ty, tz
+            last_rx_deg, last_ry_deg, last_rz_deg = rx_deg, ry_deg, rz_deg
+        else:
+            last_tx = last_tx * (1 - POS_EMA_ALPHA) + tx * POS_EMA_ALPHA
+            last_ty = last_ty * (1 - POS_EMA_ALPHA) + ty * POS_EMA_ALPHA
+            last_tz = last_tz * (1 - POS_EMA_ALPHA) + tz * POS_EMA_ALPHA
+            last_rx_deg = normalize_deg(last_rx_deg + ang_diff(rx_deg, last_rx_deg) * ANG_EMA_ALPHA)
+            last_ry_deg = normalize_deg(last_ry_deg + ang_diff(ry_deg, last_ry_deg) * ANG_EMA_ALPHA)
+            last_rz_deg = normalize_deg(last_rz_deg + ang_diff(rz_deg, last_rz_deg) * ANG_EMA_ALPHA)
+        tx, ty, tz = last_tx, last_ty, last_tz
+        rx_deg, ry_deg, rz_deg = last_rx_deg, last_ry_deg, last_rz_deg
         rx = math.radians(rx_deg)
         ry = math.radians(ry_deg)
         rz = math.radians(rz_deg)
