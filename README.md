@@ -2,9 +2,9 @@
 
 [中文说明](README.zh-CN.md)
 
-OpenMV-AprilTag is the AprilTag visual positioning workspace for a UAV aerial docking project. It is intended as a redundant localization system: when UWB ranging is noisy, unavailable, or needs cross-checking near the docking target, an OpenMV camera can estimate relative pose from an AprilTag and stream that pose to the rest of the system.
+OpenMV-AprilTag is an AprilTag visual positioning workspace for a UAV aerial docking project. It provides a camera-based localization path that can be used alongside UWB ranging during close-range docking tests.
 
-The repository contains OpenMV scripts for AprilTag detection and pose output, plus desktop tools for serial reading and 3D visualization. The project is organized for quick bench testing, camera calibration experiments, and integration with a parent-child UAV docking pipeline.
+The repository contains OpenMV scripts for AprilTag detection and pose output, plus desktop tools for serial reading and 3D visualization. It is organized for bench testing, calibration experiments, and integration with the docking pipeline.
 
 ## Purpose
 
