@@ -1,15 +1,13 @@
 <div align="center">
   <h1>OpenMV AprilTag</h1>
-  <p>面向 Mother-Ship 对接系统近距离视觉定位的 OpenMV AprilTag 位姿估计仓库。</p>
+  <p>面向母机对接系统近距离视觉定位的 OpenMV AprilTag 位姿估计工作区。</p>
 
   <p>
     <a href="README.md">English</a>
     &middot;
-    <a href="https://github.com/Ha22yX/Mother-Ship-Docking-Drone-System">主项目</a>
-    &middot;
-    <a href="https://github.com/Ha22yX/UWB-Project">UWB 模块</a>
-    &middot;
     <a href="#快速开始">快速开始</a>
+    &middot;
+    <a href="#核心能力">核心能力</a>
     &middot;
     <a href="#技术栈">技术栈</a>
   </p>
@@ -26,26 +24,31 @@
   <img src=".github/assets/readme-hero.svg" alt="OpenMV AprilTag 项目概览图" width="100%" />
 </p>
 
-## 项目价值
+## 项目概览
 
-UWB 提供中距离位置估计，但最终对接还需要近距离视觉位姿参考。本仓库把 AprilTag 路径独立出来，便于单独测试相机、串口输出和可视化工具。
+这个仓库隔离了 Mother-Ship 对接系统中的末端视觉模块。
 
-## 工作流
+UWB 负责中距离相对定位；当 OpenMV 能看到标签时，AprilTag 视觉用于进一步细化近距离对准。
 
-- 在 OpenMV 上运行 AprilTag 脚本。
-- 根据相机内参和标签尺寸估计目标标签的平移/旋转。
-- 通过 USB VCP 或 UART 输出单行位姿消息。
-- 使用 PC 工具验证坐标方向、稳定性和对准表现。
-- 把位姿流接入对接控制器或 ESP32 伴随链路。
+## 核心能力
 
-## 核心功能
+- OpenMV AprilTag 检测与位姿输出脚本。
+- USB VCP 和 UART 输出路径，便于下游设备读取。
+- PC 串口读取器和 3D 位姿查看器。
+- 保留历史实验作为参考。
+- 与 UWB 仓库和主对接项目互相引用。
 
-- OpenMV AprilTag 检测和位姿输出脚本。
-- USB VCP 与 UART3 输出路径。
-- 串口读取器、matplotlib 和 pyqtgraph 3D 查看器。
-- 作为对接项目的末端视觉定位模块。
+## 工作方式
+
+1. 在 OpenMV 上运行 AprilTag 脚本。
+2. 使用相机内参和标签尺寸估计平移/旋转。
+3. 通过 UART 或 USB VCP 输出位姿行。
+4. 用 PC 工具检查方向、稳定性和对准行为。
+5. 准备好后把位姿流接入对接控制链路。
 
 ## 快速开始
+
+可以用下面的命令在本地运行项目。
 
 ```bash
 git clone https://github.com/Ha22yX/OpenMV-AprilTag.git
@@ -57,23 +60,42 @@ python tools/serial_reader.py
 
 请根据实际硬件校准相机内参、标签尺寸、串口和波特率。
 
+## 配置项
+
+| 项目 | 作用 |
+| --- | --- |
+| 相机内参 | 位姿估计可信的前提。 |
+| 标签族/尺寸 | 必须与打印的 AprilTag 标记一致。 |
+| 串口输出 | 设置 UART/USB 模式、端口和波特率。 |
+| 坐标约定 | 接入控制前必须确认轴向。 |
+
 ## 技术栈
 
 | 层级 | 技术 | 作用 |
 | --- | --- | --- |
-| 相机 | OpenMV | 运行嵌入式 AprilTag 检测。 |
-| 标记 | AprilTag TAG25H9 | 提供末端位姿参考。 |
-| 输出 | UART / USB VCP | 向下游硬件输出位姿行。 |
+| 相机 | OpenMV | 嵌入式 AprilTag 检测。 |
+| 标记 | AprilTag TAG25H9 | 末端视觉参考。 |
+| 输出 | UART / USB VCP | 向下游硬件输出位姿流。 |
 | 工具 | Python, pyserial, matplotlib, PyQtGraph | 读取并可视化位姿流。 |
 
 ## 项目结构
 
 ```text
-openmv/                 OpenMV camera scripts
-tools/                  PC serial and 3D visualization tools
-archive/                older experiments
+openmv/                 OpenMV 相机脚本
+tools/                  PC 串口和 3D 可视化工具
+archive/                历史实验
+.github/assets/         README 概览图
 ```
 
-## 项目说明
+## 项目状态
 
-该模块与 UWB 互补：UWB 负责中距离位置，AprilTag 视觉负责近距离对准。
+台架测试定位模块。它与 UWB 互补，接入飞行/控制前必须独立验证。
+
+## 相关项目
+
+- [Mother-Ship-Docking-Drone-System](https://github.com/Ha22yX/Mother-Ship-Docking-Drone-System) - 主对接项目。
+- [UWB-Project](https://github.com/Ha22yX/UWB-Project) - 中距离相对定位模块。
+
+## 许可证
+
+当前仓库尚未声明项目级开源许可证；公开复用或分发前建议先补充 License。

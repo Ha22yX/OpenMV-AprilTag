@@ -5,11 +5,9 @@
   <p>
     <a href="README.zh-CN.md">Chinese</a>
     &middot;
-    <a href="https://github.com/Ha22yX/Mother-Ship-Docking-Drone-System">Main Project</a>
-    &middot;
-    <a href="https://github.com/Ha22yX/UWB-Project">UWB Module</a>
-    &middot;
     <a href="#quickstart">Quickstart</a>
+    &middot;
+    <a href="#features">Features</a>
     &middot;
     <a href="#tech-stack">Tech Stack</a>
   </p>
@@ -26,26 +24,31 @@
   <img src=".github/assets/readme-hero.svg" alt="OpenMV AprilTag overview image" width="100%" />
 </p>
 
-## Why This Exists
+## Overview
 
-UWB provides the mid-range position estimate, but final docking needs a short-range visual pose reference. This repo isolates the AprilTag path so the camera, serial output, and visualization tools can be tested independently.
+This repo isolates the terminal vision module of the Mother-Ship docking system.
 
-## Workflow
-
-- Run the AprilTag script on OpenMV.
-- Detect the target tag and estimate translation/rotation from camera intrinsics and tag size.
-- Output one-line pose messages through USB VCP or UART.
-- Use PC tools to verify pose direction, stability, and alignment behavior.
-- Feed the pose stream into the docking controller or ESP32 companion path.
+UWB handles mid-range relative localization; AprilTag vision is intended to refine close-range alignment when the tag is visible to the OpenMV camera.
 
 ## Features
 
 - OpenMV AprilTag detection and pose-output script.
-- USB VCP and UART3 output path.
-- Serial reader plus matplotlib and pyqtgraph 3D viewers.
-- Designed as the terminal visual localization module for the docking project.
+- USB VCP and UART output path for downstream devices.
+- PC serial reader and 3D pose viewers.
+- Archived experiments kept for reference.
+- Cross-linked role with UWB and the main docking project.
+
+## How It Works
+
+1. Run the AprilTag script on OpenMV.
+2. Estimate translation/rotation using camera intrinsics and tag size.
+3. Stream pose lines over UART or USB VCP.
+4. Use PC tools to verify direction, stability, and alignment behavior.
+5. Feed the stream into the docking controller path when ready.
 
 ## Quickstart
+
+Run the project locally with the commands below.
 
 ```bash
 git clone https://github.com/Ha22yX/OpenMV-AprilTag.git
@@ -57,23 +60,42 @@ python tools/serial_reader.py
 
 Calibrate camera intrinsics, tag size, serial port, and baud rate for your hardware.
 
+## Configuration
+
+| Item | Purpose |
+| --- | --- |
+| Camera intrinsics | Required for meaningful pose estimates. |
+| Tag family/size | Must match printed AprilTag markers. |
+| Serial output | Set UART/USB mode, port, and baud rate. |
+| Coordinate convention | Verify axis direction before control integration. |
+
 ## Tech Stack
 
 | Layer | Technology | Role |
 | --- | --- | --- |
-| Camera | OpenMV | Runs embedded AprilTag detection. |
-| Marker | AprilTag TAG25H9 | Provides the terminal pose reference. |
-| Output | UART / USB VCP | Streams pose lines to downstream hardware. |
+| Camera | OpenMV | Embedded AprilTag detection. |
+| Marker | AprilTag TAG25H9 | Terminal visual reference. |
+| Output | UART / USB VCP | Pose stream to downstream hardware. |
 | Tools | Python, pyserial, matplotlib, PyQtGraph | Read and visualize pose streams. |
 
-## Project Map
+## Project Layout
 
 ```text
 openmv/                 OpenMV camera scripts
 tools/                  PC serial and 3D visualization tools
 archive/                older experiments
+.github/assets/         README overview asset
 ```
 
-## Notes
+## Status
 
-This module complements UWB: UWB estimates mid-range position, AprilTag vision refines close-range alignment.
+Bench-test localization module. It complements UWB and should be validated independently before flight/control use.
+
+## Related Projects
+
+- [Mother-Ship-Docking-Drone-System](https://github.com/Ha22yX/Mother-Ship-Docking-Drone-System) - main docking project.
+- [UWB-Project](https://github.com/Ha22yX/UWB-Project) - mid-range relative localization module.
+
+## License
+
+No project-wide open-source license has been declared yet.
