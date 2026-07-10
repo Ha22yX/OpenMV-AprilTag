@@ -5,13 +5,13 @@
   <p>
     <a href="README.zh-CN.md">Chinese</a>
     &middot;
-    <a href="#quickstart">Quickstart</a>
-    &middot;
-    <a href="#tech-stack">Tech Stack</a>
-    &middot;
     <a href="https://github.com/Ha22yX/Mother-Ship-Docking-Drone-System">Main Project</a>
     &middot;
     <a href="https://github.com/Ha22yX/UWB-Project">UWB Module</a>
+    &middot;
+    <a href="#quickstart">Quickstart</a>
+    &middot;
+    <a href="#tech-stack">Tech Stack</a>
   </p>
 
   <p>
@@ -28,7 +28,22 @@
 
 ## Why This Exists
 
-UWB gives the docking system a mid-range relative position estimate, but the final approach needs a visual pose signal when the tag is in view. This repo isolates that OpenMV + AprilTag path.
+UWB provides the mid-range position estimate, but final docking needs a short-range visual pose reference. This repo isolates the AprilTag path so the camera, serial output, and visualization tools can be tested independently.
+
+## Workflow
+
+- Run the AprilTag script on OpenMV.
+- Detect the target tag and estimate translation/rotation from camera intrinsics and tag size.
+- Output one-line pose messages through USB VCP or UART.
+- Use PC tools to verify pose direction, stability, and alignment behavior.
+- Feed the pose stream into the docking controller or ESP32 companion path.
+
+## Features
+
+- OpenMV AprilTag detection and pose-output script.
+- USB VCP and UART3 output path.
+- Serial reader plus matplotlib and pyqtgraph 3D viewers.
+- Designed as the terminal visual localization module for the docking project.
 
 ## Quickstart
 
@@ -40,34 +55,25 @@ pip install -r tools/requirements.txt
 python tools/serial_reader.py
 ```
 
-Update camera intrinsics, tag size, serial port, and baud rate for your hardware.
-
-## Features
-
-- OpenMV script for AprilTag detection and pose output.
-- USB VCP and UART pose-line output for downstream controllers.
-- PC serial monitor plus matplotlib and pyqtgraph viewers.
-- Designed as the terminal visual localization module for the docking project.
+Calibrate camera intrinsics, tag size, serial port, and baud rate for your hardware.
 
 ## Tech Stack
 
 | Layer | Technology | Role |
 | --- | --- | --- |
-| Camera | OpenMV | Runs AprilTag detection on embedded camera hardware. |
-| Marker | AprilTag TAG25H9 | Provides terminal pose reference. |
+| Camera | OpenMV | Runs embedded AprilTag detection. |
+| Marker | AprilTag TAG25H9 | Provides the terminal pose reference. |
+| Output | UART / USB VCP | Streams pose lines to downstream hardware. |
 | Tools | Python, pyserial, matplotlib, PyQtGraph | Read and visualize pose streams. |
-| Integration | UART / USB VCP | Pass pose lines to ESP32 or a companion computer. |
-
-
-## Project Notes
-
-This is a companion repository for [Mother-Ship-Docking-Drone-System](https://github.com/Ha22yX/Mother-Ship-Docking-Drone-System). It complements [UWB-Project](https://github.com/Ha22yX/UWB-Project): UWB estimates mid-range relative position, AprilTag vision helps with final alignment.
-
 
 ## Project Map
 
 ```text
-openmv/    OpenMV camera scripts
-tools/     PC serial and 3D visualization tools
-archive/   older experiments
+openmv/                 OpenMV camera scripts
+tools/                  PC serial and 3D visualization tools
+archive/                older experiments
 ```
+
+## Notes
+
+This module complements UWB: UWB estimates mid-range position, AprilTag vision refines close-range alignment.
